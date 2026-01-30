@@ -38,10 +38,14 @@ This repository contains basic concepts and examples for getting started with Go
 
 ```
 golang-basics/
-├── basics/
-├── functions/
-├── structs/
-├── concurrency/
+├── bmi-calculator/
+├──
+├── 
+├── 
+├── 
+├── 
+├── 
+├── 
 └── README.md
 ```
 
