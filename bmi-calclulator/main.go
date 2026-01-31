@@ -1,28 +1,65 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"math"
 )
 
 func main() {
-	const BMIPower float64 = 2
-	var userHeight, userWeight float64
+	var wantContinue string
 
-	fmt.Println("__Body Index Mass Calculator__")
+	for {
+		const BMIPower float64 = 2
+		var userHeight, userWeight float64
 
-	userHeight, userWeight = getUserInput()
-	BMI := calculateBMI(userWeight, userHeight, BMIPower)
-	outputResult(BMI)
+		fmt.Println("__Body Index Mass Calculator__")
+
+		userHeight, userWeight = getUserInput()
+		BMI, err := calculateBMI(userWeight, userHeight, BMIPower)
+
+		if err != nil {
+			panic(err)
+		}
+
+		outputResult(BMI)
+
+		fmt.Print("Do you want to continue (yes or no): ")
+		fmt.Scan(&wantContinue)
+
+		if wantContinue == "yes" {
+			continue
+		} else {
+			break
+		}
+	}
 }
 
 func outputResult(BMI float64) {
-	result := fmt.Sprintf("BMI: %.0f", BMI)
-	fmt.Print(result)
+	result := fmt.Sprintf("Your BMI is: %.0f", BMI)
+
+	switch {
+	case BMI < 16:
+		fmt.Println("Severe Thinness")
+	case BMI < 18.5:
+		fmt.Println("Moderate Thinness")
+	case BMI < 25:
+		fmt.Println("Normal")
+	case BMI < 30:
+		fmt.Println("Overweight")
+	default:
+		fmt.Println("Obese")
+	}
+
+	fmt.Println(result)
 }
 
-func calculateBMI(weight, height, power float64) float64 {
-	return weight / math.Pow(height/100, power)
+func calculateBMI(weight, height, power float64) (float64, error) {
+	if weight <= 0 || height <= 0 {
+		return 0, errors.New("weight or height is not specified")
+	}
+
+	return weight / math.Pow(height/100, power), nil
 }
 
 func getUserInput() (float64, float64) {
