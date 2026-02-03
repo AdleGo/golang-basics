@@ -43,7 +43,7 @@ func viewBookmarks(bookmarks map[string]string) {
 	}
 }
 
-func addBookmark(bookmarks map[string]string) map[string]string {
+func addBookmark(bookmarks map[string]string) {
 	var name, address string
 	fmt.Print("Enter name: ")
 	fmt.Scan(&name)
@@ -51,14 +51,12 @@ func addBookmark(bookmarks map[string]string) map[string]string {
 	fmt.Scan(&address)
 
 	bookmarks[name] = address
-	return bookmarks
 }
 
-func deleteBookmark(bookmarks map[string]string) map[string]string {
+func deleteBookmark(bookmarks map[string]string) {
 	var name string
 	fmt.Print("Enter name: ")
 	fmt.Scan(&name)
 
 	delete(bookmarks, name)
-	return bookmarks
 }
