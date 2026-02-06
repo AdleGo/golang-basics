@@ -12,21 +12,17 @@ import (
 var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQESTUVWXYZ1234567890-*!")
 
 type Account struct {
-	login    string
-	password string
-	url      string
+	Login     string    `json:"login"`
+	Password  string    `json:"password"`
+	Url       string    `json:"url"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
 }
 
-type AccountWithTimestamp struct {
-	createdAt time.Time
-	updatedAt time.Time
-	Account
-}
-
-func (a AccountWithTimestamp) OutputAccountInfo() {
-	color.Cyan(a.login)
-	color.Cyan(a.password)
-	color.Cyan(a.url)
+func (a Account) OutputAccountInfo() {
+	color.Cyan(a.Login)
+	color.Cyan(a.Password)
+	color.Cyan(a.Url)
 }
 
 func (a *Account) generatePassword(n int) {
@@ -36,10 +32,10 @@ func (a *Account) generatePassword(n int) {
 		result[i] = letterRunes[rand.Intn(len(letterRunes))]
 	}
 
-	a.password = string(result)
+	a.Password = string(result)
 }
 
-func NewAccount(login, password, urlString string) (*AccountWithTimestamp, error) {
+func NewAccount(login, password, urlString string) (*Account, error) {
 	if login == "" {
 		return nil, errors.New("Login cannot be empty")
 	}
@@ -50,18 +46,16 @@ func NewAccount(login, password, urlString string) (*AccountWithTimestamp, error
 		return nil, errors.New("Invalud URL")
 	}
 
-	newAcc := &AccountWithTimestamp{
-		createdAt: time.Now(),
-		updatedAt: time.Now(),
-		Account: Account{
-			login:    login,
-			url:      urlString,
-			password: password,
-		},
+	newAcc := &Account{
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+		Login:     login,
+		Url:       urlString,
+		Password:  password,
 	}
 
 	if password == "" {
-		newAcc.Account.generatePassword(12)
+		newAcc.generatePassword(12)
 	}
 
 	return newAcc, nil
