@@ -2,25 +2,45 @@ package account
 
 import (
 	"encoding/json"
-	"password-logger/files"
 	"strings"
 	"time"
 
 	"github.com/fatih/color"
 )
 
+type ByteReader interface {
+	Read() ([]byte, error)
+}
+
+type ByteWriter interface {
+	Write([]byte)
+}
+
+type Db interface {
+	ByteReader
+	ByteWriter
+}
+
 type Vault struct {
 	Accounts []Account `json:"accounts"`
 	UpdateAt time.Time `json:"updatedAt"`
 }
 
-func NewVault() *Vault {
-	file, err := files.ReadFile("data.json")
+type VaultWithDb struct {
+	Vault
+	db Db
+}
+
+func NewVault(db Db) *VaultWithDb {
+	file, err := db.Read()
 
 	if err != nil {
-		return &Vault{
-			Accounts: []Account{},
-			UpdateAt: time.Now(),
+		return &VaultWithDb{
+			Vault: Vault{
+				Accounts: []Account{},
+				UpdateAt: time.Now(),
+			},
+			db: db,
 		}
 	}
 
@@ -30,16 +50,23 @@ func NewVault() *Vault {
 
 	if err != nil {
 		color.Red(err.Error())
-		return &Vault{
-			Accounts: []Account{},
-			UpdateAt: time.Now(),
+
+		return &VaultWithDb{
+			Vault: Vault{
+				Accounts: []Account{},
+				UpdateAt: time.Now(),
+			},
+			db: db,
 		}
 	}
 
-	return &vault
+	return &VaultWithDb{
+		Vault: vault,
+		db:    db,
+	}
 }
 
-func (v *Vault) FindAccountsByUrl(url string) []Account {
+func (v *VaultWithDb) FindAccountsByUrl(url string) []Account {
 	var accounts []Account
 	for _, acc := range v.Accounts {
 		isMatched := strings.Contains(acc.Url, url)
@@ -52,7 +79,7 @@ func (v *Vault) FindAccountsByUrl(url string) []Account {
 	return accounts
 }
 
-func (v *Vault) DeleteAccountByUrl(url string) bool {
+func (v *VaultWithDb) DeleteAccountByUrl(url string) bool {
 	var accounts []Account
 	isDeleted := false
 
@@ -68,24 +95,27 @@ func (v *Vault) DeleteAccountByUrl(url string) bool {
 
 	v.Accounts = accounts
 	v.UpdateAt = time.Now()
-	data, err := v.ToBytes()
+	data, err := v.Vault.ToBytes()
 
 	if err != nil {
 		color.Red("could not transform file data.json")
 	}
-	files.WriteFile(data, "data.json")
+
+	v.db.Write(data)
+
 	return isDeleted
 }
 
-func (v *Vault) AddAccount(acc Account) {
+func (v *VaultWithDb) AddAccount(acc Account) {
 	v.Accounts = append(v.Accounts, acc)
 	v.UpdateAt = time.Now()
-	data, err := v.ToBytes()
+	data, err := v.Vault.ToBytes()
 
 	if err != nil {
 		color.Red("could not transform file data.json")
 	}
-	files.WriteFile(data, "data.json")
+
+	v.db.Write(data)
 }
 
 func (v *Vault) ToBytes() ([]byte, error) {

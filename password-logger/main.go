@@ -3,13 +3,15 @@ package main
 import (
 	"fmt"
 	"password-logger/account"
+	"password-logger/files"
+	"password-logger/output"
 
 	"github.com/fatih/color"
 )
 
 func main() {
 	fmt.Println("***Password Logger***")
-	vault := account.NewVault()
+	vault := account.NewVault(files.NewJsonDb("data.json"))
 
 menuloop:
 	for {
@@ -50,7 +52,7 @@ func promptData(prompt string) string {
 	return result
 }
 
-func createAccount(vault *account.Vault) {
+func createAccount(vault *account.VaultWithDb) {
 	login := promptData("Enter login: ")
 	password := promptData("Enter password: ")
 	url := promptData("Enter URL: ")
@@ -65,7 +67,7 @@ func createAccount(vault *account.Vault) {
 	vault.AddAccount(*myAccount)
 }
 
-func findAccount(vault *account.Vault) {
+func findAccount(vault *account.VaultWithDb) {
 	url := promptData("Enter URL: ")
 
 	accounts := vault.FindAccountsByUrl(url)
@@ -79,7 +81,7 @@ func findAccount(vault *account.Vault) {
 	}
 }
 
-func deleteAccount(vault *account.Vault) {
+func deleteAccount(vault *account.VaultWithDb) {
 	url := promptData("Enter URL: ")
 
 	isDeleted := vault.DeleteAccountByUrl(url)
@@ -87,6 +89,6 @@ func deleteAccount(vault *account.Vault) {
 	if isDeleted {
 		color.Green("Account deleted")
 	} else {
-		color.Red("Account not found")
+		output.PrintError("Account not found")
 	}
 }
