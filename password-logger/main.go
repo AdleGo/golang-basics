@@ -5,9 +5,17 @@ import (
 	"password-logger/account"
 	"password-logger/files"
 	"password-logger/output"
+	"strings"
 
 	"github.com/fatih/color"
 )
+
+var menu = map[string]func(*account.VaultWithDb){
+	"1": createAccount,
+	"2": findAccountByUrl,
+	"3": findAccountByLogin,
+	"4": deleteAccount,
+}
 
 func main() {
 	fmt.Println("***Password Logger***")
@@ -16,26 +24,25 @@ func main() {
 menuloop:
 	for {
 		displayMenu()
+
 		choice := menuChoice()
 
-		switch choice {
-		case "1":
-			createAccount(vault)
-		case "2":
-			findAccount(vault)
-		case "3":
-			deleteAccount(vault)
-		case "4":
+		menuFunc := menu[choice]
+
+		if menuFunc == nil {
 			break menuloop
 		}
+
+		menuFunc(vault)
 	}
 }
 
 func displayMenu() {
 	fmt.Println("1. Create Account")
-	fmt.Println("2. Find Account")
-	fmt.Println("3. Delete Account")
-	fmt.Println("4. Exit")
+	fmt.Println("2. Find Account by URL")
+	fmt.Println("3. Find Account by Login")
+	fmt.Println("4. Delete Account")
+	fmt.Println("5. Exit")
 }
 
 func menuChoice() string {
@@ -67,10 +74,28 @@ func createAccount(vault *account.VaultWithDb) {
 	vault.AddAccount(*myAccount)
 }
 
-func findAccount(vault *account.VaultWithDb) {
+func findAccountByUrl(vault *account.VaultWithDb) {
 	url := promptData("Enter URL: ")
 
-	accounts := vault.FindAccountsByUrl(url)
+	accounts := vault.FindAccounts(url, func(acc account.Account, str string) bool {
+		return strings.Contains(acc.Url, str)
+	})
+
+	if len(accounts) == 0 {
+		color.Red("No accounts found")
+	}
+
+	for _, acc := range accounts {
+		acc.OutputAccountInfo()
+	}
+}
+
+func findAccountByLogin(vault *account.VaultWithDb) {
+	login := promptData("Enter Login: ")
+
+	accounts := vault.FindAccounts(login, func(acc account.Account, str string) bool {
+		return strings.Contains(acc.Login, str)
+	})
 
 	if len(accounts) == 0 {
 		color.Red("No accounts found")
